@@ -2,7 +2,6 @@
 #include "../src/seq_nms.h"
 #include "utils.cpp"
 
-
 TEST(calculate_area, area_single_box) {
     auto boxes = torch::tensor({1, 2, 3, 4}, {torch::kFloat32});
     boxes = boxes.view({1, 1, 4});
@@ -59,7 +58,7 @@ TEST(build_box_sequences, one_overlap) {
     classes = classes.view({2, 2});
 
     auto graph_sequences = build_box_sequences(boxes, classes, linkage_threshold);
-    box_seq_t expected_sequence {{{0}, {}}};
+    box_seq_t expected_sequence{{{0}, {}}};
 
     ASSERT_TRUE(graph_sequence_equal(graph_sequences, expected_sequence));
 }
@@ -74,11 +73,10 @@ TEST(build_box_sequences, two_overlap) {
     classes = classes.view({2, 2});
 
     auto graph_sequences = build_box_sequences(boxes, classes, linkage_threshold);
-    box_seq_t expected_sequence {{{0, 1}, {}}};
+    box_seq_t expected_sequence{{{0, 1}, {}}};
 
     ASSERT_TRUE(graph_sequence_equal(graph_sequences, expected_sequence));
 }
-
 
 TEST(build_box_sequences, test_threshold_filter) {
     double linkage_threshold = 0.5;
@@ -90,11 +88,10 @@ TEST(build_box_sequences, test_threshold_filter) {
     classes = classes.view({2, 2});
 
     auto graph_sequences = build_box_sequences(boxes, classes, linkage_threshold);
-    box_seq_t expected_sequence {{{}, {}}};
+    box_seq_t expected_sequence{{{}, {}}};
 
     ASSERT_TRUE(graph_sequence_equal(graph_sequences, expected_sequence));
 }
-
 
 TEST(build_box_sequences, test_class_filter) {
     double linkage_threshold = 0.1;
@@ -106,13 +103,12 @@ TEST(build_box_sequences, test_class_filter) {
     classes = classes.view({2, 2});
 
     auto graph_sequences = build_box_sequences(boxes, classes, linkage_threshold);
-    box_seq_t expected_sequence {{{}, {}}};
+    box_seq_t expected_sequence{{{}, {}}};
 
     ASSERT_TRUE(graph_sequence_equal(graph_sequences, expected_sequence));
 }
 
-
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

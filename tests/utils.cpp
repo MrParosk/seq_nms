@@ -1,7 +1,6 @@
 #include "../src/seq_nms.h"
 
-
-template<typename T>
+template <typename T>
 bool check_same_size(std::vector<T> v1, std::vector<T> v2) {
     if (v1.size() != v2.size()) {
         return false;
@@ -9,7 +8,6 @@ bool check_same_size(std::vector<T> v1, std::vector<T> v2) {
         return true;
     }
 }
-
 
 bool graph_sequence_equal(box_seq_t box_seq, box_seq_t expected_box_seq) {
     // TODO: refactor this function
