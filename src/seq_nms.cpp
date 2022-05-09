@@ -3,6 +3,12 @@
 using namespace torch::indexing;
 
 torch::Tensor calculate_area(const torch::Tensor& boxes) {
+    /*
+    Computes the area of the boxes.
+
+    boxes are expected to have the shape [N, M, 4] and of the format [x_min, y_min, x_max, y_max].
+    */
+
     auto x1 = boxes.index({Slice(), Slice(), 0});
     auto y1 = boxes.index({Slice(), Slice(), 1});
     auto x2 = boxes.index({Slice(), Slice(), 2});
@@ -16,6 +22,17 @@ torch::Tensor calculate_iou_given_area(
     const torch::Tensor& boxes_b,
     const torch::Tensor& areas_a,
     const torch::Tensor& areas_b) {
+    /*
+    Computes the IOU between boxes_a and boxes_b.
+
+    boxes_a are expected to have the shape [N, 4] and of the format [x_min, y_min, x_max, y_max].
+    boxes_b are expected to have the shape [M, 4] and of the format [x_min, y_min, x_max, y_max].
+    areas_a are expected to have the shape [N].
+    areas_b are expected to have the shape [M].
+
+    The returned IOU tensor has the shape [N, M].
+    */
+
     auto max_xy = torch::min(boxes_a.index({Slice(), None, Slice(2, None)}), boxes_b.index({None, Slice(), Slice(2, None)}));
 
     auto min_xy = torch::max(boxes_a.index({Slice(), None, Slice(None, 2)}), boxes_b.index({None, Slice(), Slice(None, 2)}));
@@ -29,6 +46,16 @@ torch::Tensor calculate_iou_given_area(
 }
 
 box_seq_t build_box_sequences(const torch::Tensor& boxes, const torch::Tensor& classes, const double& linkage_threshold) {
+    /*
+    Creates a graph where vericies are object at a given frame and the edges are if they have an IOU higher than
+    @linkage_threshold (two consecutive frames).
+
+    boxes are expected to have the shape [F, N, 4] and of the format [x_min, y_min, x_max, y_max].
+        F is the number of frames and N is the number of objects per frame.
+    classes are expected to have the shape [F, N].
+    linkage_threshold is the threshold for linking two objects in consecutive frames.
+    */
+
     auto areas = calculate_area(boxes);
 
     box_seq_t box_graph;
