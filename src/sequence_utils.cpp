@@ -42,24 +42,22 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
     // list of all independent sequences where a given row corresponds to starting frame
     std::vector<score_indicies_list> sequence_roots;
 
-    score_indicies_list max_scores;
+    score_indicies_list last_scores;
     for (int idx = 0; idx < scores.size(1); idx++) {
         float score = scores.index({scores.size(0) - 1, idx}).item<float>();
         auto index_list = std::vector<int>{idx};
-        max_scores.push_back(std::make_tuple(score, index_list));
+        last_scores.push_back(std::make_tuple(score, index_list));
     }
+    max_scores_paths.push_back(last_scores);
 
-    max_scores_paths.push_back(max_scores);
+    for (int frame_idx = box_graph.size() - 1; frame_idx >= 0; frame_idx--) {
+        auto frame_edges = box_graph[frame_idx];
 
-    for (int reverse_idx = box_graph.size() - 1; reverse_idx >= 0; reverse_idx--) {
-        auto frame_edges = box_graph[reverse_idx];
-        int frame_idx = box_graph.size() - reverse_idx - 1;
-
-        auto used_in_sequence = torch::zeros(static_cast<long>(max_scores_paths.back().size()), {torch::kInt32});
+        auto used_in_sequence = torch::zeros(static_cast<long>(max_scores_paths.back().size()), {torch::kBool});
         score_indicies_list max_path_frame;
 
         for (int box_idx = 0; box_idx < frame_edges.size(); box_idx++) {
-            auto box_edges = frame_edges[box_idx];
+            std::vector<int> box_edges = frame_edges[box_idx];
 
             if (box_edges.size() == 0) {
                 // no edges for current box so consider it a max path consisting of a single node
@@ -74,7 +72,7 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
                 // (no negative scores)
                 std::vector<float> score_list;
                 for (int e_idx : box_edges) {
-                    used_in_sequence.index({e_idx}) = 1;
+                    used_in_sequence.index({e_idx}) = true;
                     score_list.push_back(std::get<0>(max_scores_paths.back()[e_idx]));
                 }
 
@@ -89,14 +87,14 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
         }
 
         // create new sequence roots for boxes in frame at frame_idx + 1 that did not have links from boxes in frame_idx
-        score_indicies_list new_sequence_roots;
+        score_indicies_list new_sequence_root;
         for (int idx = 0; idx < used_in_sequence.size(0); idx++) {
-            if (used_in_sequence.index({idx}).item<int>() == 0) {
-                new_sequence_roots.push_back(max_scores_paths.back()[idx]);
+            if (!used_in_sequence.index({idx}).item<bool>()) {
+                new_sequence_root.push_back(max_scores_paths.back()[idx]);
             }
         }
 
-        sequence_roots.push_back(new_sequence_roots);
+        sequence_roots.push_back(new_sequence_root);
         max_scores_paths.push_back(max_path_frame);
     }
 
