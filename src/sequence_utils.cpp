@@ -1,6 +1,13 @@
 #include "sequence_utils.h"
 
 std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::vector<score_indicies_list>& sequences) {
+    /*
+    Find the element that has the highest score.
+
+    sequences are expected to have a length of number of frames.
+        For each element in sequences are expected to have a length number of boxes.
+    */
+
     float best_score = 0.0;
     std::vector<int> best_sequence;
     int sequence_frame_index = 0;
@@ -33,13 +40,14 @@ std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::
 }
 
 std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box_graph, torch::Tensor& scores) {
-    // list of tuples storing (score up to current frame, path up to current frame)
-    // we dynamically build up best paths through graph starting from the end frame
-    // s.t we can determine the beginning of sequences i.e. if there are no links
-    // to a box from previous frames, then it is a candidate for starting a sequence
-    std::vector<score_indicies_list> max_scores_paths;
+    /*
+    A function for finding the best path through the graph @box_graph.
+    The best path is the one that has the highest cumulative sum.
+    We dynamically build up best paths through graph starting from the end frame such that we can determine the beginning of
+    sequences. For example if there are no links to a box from previous frames, then it is a candidate for starting a sequence.
+    */
 
-    // list of all independent sequences where a given row corresponds to starting frame
+    std::vector<score_indicies_list> max_scores_paths;
     std::vector<score_indicies_list> sequence_roots;
 
     score_indicies_list last_scores;
@@ -67,9 +75,9 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
                 max_path_frame.push_back(std::make_tuple(score, indicies));
             } else {
                 // extend previous max paths
-                // here we use box_edges list to index used_in_sequence list and mark boxes in corresponding frame t+1
+                // here we use box_edges to index used_in_sequence and mark boxes in corresponding frame t+1
                 // as part of a sequence since we have links to them and can always make a better max path by making it longer
-                // (no negative scores)
+                // (score >= 0.0)
                 std::vector<float> score_list;
                 for (int e_idx : box_edges) {
                     used_in_sequence.index({e_idx}) = true;
@@ -98,7 +106,6 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
         max_scores_paths.push_back(max_path_frame);
     }
 
-    // add sequences starting in begining frame as roots
     sequence_roots.push_back(max_scores_paths.back());
 
     // reverse sequence roots since built sequences from back to front
