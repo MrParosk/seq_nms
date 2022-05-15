@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include "../src/custom_types.h"
 #include "../src/sequence_utils.h"
 
 TEST(find_highest_score_sequence, find_highest) {

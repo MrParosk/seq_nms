@@ -15,7 +15,9 @@ std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::
     for (int f_idx = 0; f_idx < sequences.size(); f_idx++) {
         score_indicies_list frame_sequences = sequences[f_idx];
 
-        if (frame_sequences.size() == 0) {continue;}
+        if (frame_sequences.size() == 0) {
+            continue;
+        }
 
         auto score_tensor = torch::empty(frame_sequences.size(), {torch::kFloat32});
         for (int i = 0; i < frame_sequences.size(); i++) {
