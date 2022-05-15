@@ -37,7 +37,7 @@ std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::
     return std::make_tuple(sequence_frame_index, best_sequence, best_score);
 }
 
-std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box_graph, torch::Tensor& scores) {
+std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box_graph, const torch::Tensor& scores) {
     /*
     A function for finding the best path through the graph @box_graph.
     The best path is the one that has the highest cumulative sum.
