@@ -1,12 +1,12 @@
 #include "sequence_utils.h"
 
-std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::vector<score_indicies_list>& sequence_roots) {
+std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::vector<score_indicies_list>& sequences) {
     float best_score = 0.0;
     std::vector<int> best_sequence;
     int sequence_frame_index = 0;
 
-    for (int s_idx = 0; s_idx < sequence_roots.size(); s_idx++) {
-        score_indicies_list frame_sequences = sequence_roots[s_idx];
+    for (int s_idx = 0; s_idx < sequences.size(); s_idx++) {
+        score_indicies_list frame_sequences = sequences[s_idx];
 
         if (frame_sequences.size() == 0) {
             continue;
@@ -22,7 +22,7 @@ std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::
         if (std::get<0>(frame_sequences[max_idx]) > best_score) {
             best_score = std::get<0>(frame_sequences[max_idx]);
 
-            std::vector<int> best_sequence = std::get<1>(frame_sequences[max_idx]);
+            best_sequence = std::get<1>(frame_sequences[max_idx]);
             std::reverse(best_sequence.begin(), best_sequence.end());
 
             sequence_frame_index = s_idx;

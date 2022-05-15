@@ -2,8 +2,7 @@
 #include <torch/torch.h>
 #include <tuple>
 #include <vector>
-
-typedef std::vector<std::vector<std::vector<int>>> box_seq_t;
+#include "custom_types.h"
 
 torch::Tensor calculate_area(const torch::Tensor& boxes);
 
