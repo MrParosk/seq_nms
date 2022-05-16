@@ -115,3 +115,34 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
 
     return find_highest_score_sequence(sequence_roots);
 }
+
+void delete_sequence(
+    const std::vector<int>& sequence,
+    torch::Tensor& scores,
+    const int& sequence_frame_index,
+    const float& max_sum,
+    const ScoreMetric& metric) {
+    if (metric == ScoreMetric::avg) {
+        float avg_score = max_sum / static_cast<float>(sequence.size());
+
+        for (int i = 0; i < sequence.size(); i++) {
+            int box_idx = sequence[i];
+            scores[sequence_frame_index + i][box_idx] = avg_score;
+        }
+    } else {
+        // metric == ScoreMetric::max
+        float max_score = 0.0;
+
+        for (int i = 0; i < sequence.size(); i++) {
+            int box_idx = sequence[i];
+            if (scores[sequence_frame_index + i][box_idx].item<float>() > max_score) {
+                max_score = scores[sequence_frame_index + i][box_idx].item<float>();
+            }
+        }
+
+        for (int i = 0; i < sequence.size(); i++) {
+            int box_idx = sequence[i];
+            scores.index({sequence_frame_index + i, box_idx}) = max_score;
+        }
+    }
+}
