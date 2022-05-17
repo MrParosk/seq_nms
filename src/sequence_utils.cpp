@@ -1,4 +1,8 @@
 #include "sequence_utils.h"
+#include <algorithm>
+#include "box_utils.h"
+
+using namespace torch::indexing;
 
 std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::vector<score_indicies_list>& sequences) {
     /*
@@ -116,7 +120,7 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
     return find_highest_score_sequence(sequence_roots);
 }
 
-void delete_sequence(
+void rescore_sequence(
     const std::vector<int>& sequence,
     torch::Tensor& scores,
     const int& sequence_frame_index,
@@ -143,6 +147,52 @@ void delete_sequence(
         for (int i = 0; i < sequence.size(); i++) {
             int box_idx = sequence[i];
             scores.index({sequence_frame_index + i, box_idx}) = max_score;
+        }
+    }
+}
+
+void delete_sequence(
+    const std::vector<int>& sequence,
+    const int& sequence_frame_index,
+    const torch::Tensor& scores,
+    const torch::Tensor& boxes,
+    box_seq_t& box_graph,
+    const float& iou_threshold) {
+    torch::Tensor box_areas = calculate_area(boxes);
+
+    for (int s_idx = 0; s_idx < sequence.size(); s_idx++) {
+        int box_idx = sequence[s_idx];
+
+        torch::Tensor other_boxes = boxes.index({sequence_frame_index + s_idx, Slice(), Slice()});
+        torch::Tensor other_areas = box_areas.index({sequence_frame_index + s_idx, Slice(), Slice()});
+
+        torch::Tensor seq_box = boxes.index({sequence_frame_index + s_idx, box_idx, Slice()});
+        seq_box = seq_box.unsqueeze(0);
+        torch::Tensor seq_box_area = box_areas.index({sequence_frame_index + s_idx, box_idx, Slice()});
+        seq_box_area = seq_box_area.unsqueeze(0);
+
+        torch::Tensor iou_tensor = calculate_iou_given_area(other_boxes, seq_box, other_areas, seq_box_area);
+
+        std::vector<int> delete_indicies;
+        for (int i = 0; i < iou_tensor.size(0); i++) {
+            if (iou_tensor.index({i}).item<float>() >= iou_threshold) {
+                delete_indicies.push_back(i);
+            }
+        }
+
+        if (sequence_frame_index + s_idx < box_graph.size()) {
+            for (int delete_idx : delete_indicies) {
+                box_graph[sequence_frame_index + s_idx][delete_idx].clear();
+            }
+        }
+
+        if ((s_idx > 0) || (sequence_frame_index > 0)) {
+            // remove connections to current sequence node from previous frame
+            for (auto& prior_box : box_graph[sequence_frame_index + s_idx - 1]) {
+                for (int delete_idx : delete_indicies) {
+                    prior_box.erase(std::remove(prior_box.begin(), prior_box.end(), delete_idx), prior_box.end());
+                }
+            }
         }
     }
 }
