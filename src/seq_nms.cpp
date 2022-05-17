@@ -1,5 +1,8 @@
+#include <tuple>
+#include <vector>
 #include "seq_nms.h"
 #include "box_utils.h"
+#include "sequence_utils.h"
 
 using namespace torch::indexing;
 
@@ -49,4 +52,29 @@ box_seq_t build_box_sequences(const torch::Tensor& boxes, const torch::Tensor& c
     }
 
     return box_graph;
+}
+
+void seq_nms(
+    const torch::Tensor& boxes,
+    const torch::Tensor& scores,
+    const torch::Tensor& classes,
+    const float& linkage_threshold,
+    const float& iou_threshold,
+    const ScoreMetric& metric) {
+    box_seq_t box_graph = build_box_sequences(boxes, classes, linkage_threshold);
+    torch::Tensor local_scores = scores.clone();
+
+    while (true) {
+        auto best_tuple = find_best_sequence(box_graph, local_scores);
+        int sequence_frame_index = std::get<0>(best_tuple);
+        std::vector<int> best_sequence = std::get<1>(best_tuple);
+        float best_score = std::get<2>(best_tuple);
+
+        if (best_sequence.size() <= 1) {
+            break;
+        }
+
+        rescore_sequence(best_sequence, local_scores, sequence_frame_index, best_score, metric);
+        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_graph, iou_threshold);
+    }
 }

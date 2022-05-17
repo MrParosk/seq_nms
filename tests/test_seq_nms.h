@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "../src/seq_nms.h"
 
+using namespace torch::indexing;
+
 TEST(build_box_sequences, one_overlap) {
     double linkage_threshold = 0.1;
 
@@ -59,4 +61,30 @@ TEST(build_box_sequences, test_class_filter) {
     box_seq_t expected_sequence{{{}, {}}};
 
     ASSERT_EQ(graph_sequences, expected_sequence);
+}
+
+TEST(seq_nms, no_errors) {
+    // This test simply checks that we can run the function without errors, but doesn't validate the results
+    torch::manual_seed(42);
+
+    auto width = 50.0 * torch::rand({100, 20});
+    auto height = 50.0 * torch::rand({100, 20});
+    auto x1 = 50.0 * torch::rand({100, 20});
+    auto y1 = 50.0 * torch::rand({100, 20});
+
+    auto boxes = torch::empty({100, 20, 4});
+    boxes.index({Slice(), Slice(), 0}) = x1;
+    boxes.index({Slice(), Slice(), 1}) = y1;
+    boxes.index({Slice(), Slice(), 2}) = x1 + width;
+    boxes.index({Slice(), Slice(), 3}) = y1 + height;
+
+    auto scores = torch::rand({100, 20});
+
+    auto classes = torch::randint(0, 10, {100, 20});
+
+    float linkage_theshold = 0.3;
+    float iou_threshold = 0.2;
+    ScoreMetric metric = ScoreMetric::avg;
+
+    seq_nms(boxes, scores, classes, linkage_theshold, iou_threshold, metric);
 }

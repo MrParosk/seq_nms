@@ -1,6 +1,6 @@
-#include "sequence_utils.h"
 #include <algorithm>
 #include "box_utils.h"
+#include "sequence_utils.h"
 
 using namespace torch::indexing;
 
@@ -164,11 +164,11 @@ void delete_sequence(
         int box_idx = sequence[s_idx];
 
         torch::Tensor other_boxes = boxes.index({sequence_frame_index + s_idx, Slice(), Slice()});
-        torch::Tensor other_areas = box_areas.index({sequence_frame_index + s_idx, Slice(), Slice()});
+        torch::Tensor other_areas = box_areas.index({sequence_frame_index + s_idx, Slice()});
 
         torch::Tensor seq_box = boxes.index({sequence_frame_index + s_idx, box_idx, Slice()});
         seq_box = seq_box.unsqueeze(0);
-        torch::Tensor seq_box_area = box_areas.index({sequence_frame_index + s_idx, box_idx, Slice()});
+        torch::Tensor seq_box_area = box_areas.index({sequence_frame_index + s_idx, box_idx});
         seq_box_area = seq_box_area.unsqueeze(0);
 
         torch::Tensor iou_tensor = calculate_iou_given_area(other_boxes, seq_box, other_areas, seq_box_area);
