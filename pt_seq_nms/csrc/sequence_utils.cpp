@@ -71,10 +71,7 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
         auto used_in_sequence = torch::zeros(static_cast<long>(max_scores_paths.back().size()), {torch::kBool});
         auto used_in_sequence_acc = used_in_sequence.accessor<bool, 1>();
 
-        // std::vector<bool> used_in_sequence(max_scores_paths.back().size(), false);
-
         score_indicies_list max_path_frame;
-
         for (int box_idx = 0; box_idx < frame_edges.size(); box_idx++) {
             std::vector<int> box_edges = frame_edges[box_idx];
 

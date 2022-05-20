@@ -40,7 +40,7 @@ box_seq_t build_box_sequences(
         for (int b_idx = 0; b_idx < current_box.size(0); b_idx++) {
             std::vector<int> edges;
             for (int ovr_idx = 0; ovr_idx < overlaps.size(1); ovr_idx++) {
-                auto iou = overlaps_acc[b_idx][ovr_idx];
+                float iou = overlaps_acc[b_idx][ovr_idx];
                 bool same_class = (classes_acc[f_idx][b_idx] == classes_acc[f_idx + 1][ovr_idx]);
 
                 if ((iou >= linkage_threshold) && same_class) {

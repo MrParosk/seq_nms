@@ -5,3 +5,4 @@ libtorch/
 seq_nms.so
 pt_seq_nms.egg-info/
 pt_seq_nms/__pycache__/
+tests/__pycache__/
