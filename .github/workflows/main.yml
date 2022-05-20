@@ -55,3 +55,27 @@ jobs:
         pip uninstall -y pt_soft_nms
         pip install -e .
         pytest --cov=pt_soft_nms --cov-report=xml
+
+  build-windows:
+    runs-on: "windows-latest"
+    strategy:
+      matrix:
+        python-version: ['3.8']
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ilammy/msvc-dev-cmd@v1
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install test dependencies
+      run: |
+        pip install -r requirements-dev.txt
+    - name: Install pytorch
+      run: |
+        pip install torch==1.11.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    - name: Install package
+      run: pip install .
+      env:
+        DISTUTILS_USE_SDK: 1
+    - name: Run unit tests
+      run: pytest tests
