@@ -2,5 +2,6 @@
 .venv/
 build/
 libtorch/
-pt_seq_nms.egg-info/
 seq_nms.so
+pt_seq_nms.egg-info/
+pt_seq_nms/__pycache__/

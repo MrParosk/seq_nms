@@ -7,5 +7,5 @@ def seq_nms(
     linkage_threshold: float,
     iou_threshold: float,
     metrics: str = "avg",
-) -> None:
-    torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
+) -> torch.Tensor:
+    return torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)

@@ -24,8 +24,9 @@ std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::
         }
 
         auto score_tensor = torch::empty(frame_sequences.size(), {torch::kFloat32});
+        auto score_acc = score_tensor.accessor<float, 1>();
         for (int i = 0; i < frame_sequences.size(); i++) {
-            score_tensor.index({i}) = std::get<0>(frame_sequences[i]);
+            score_acc[i] = std::get<0>(frame_sequences[i]);
         }
 
         int max_idx = torch::argmax(score_tensor).item<int>();
@@ -54,9 +55,11 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
     std::vector<score_indicies_list> max_scores_paths;
     std::vector<score_indicies_list> sequence_roots;
 
+    auto scores_acc = scores.accessor<float, 2>();
+
     score_indicies_list last_scores;
     for (int idx = 0; idx < scores.size(1); idx++) {
-        float score = scores.index({scores.size(0) - 1, idx}).item<float>();
+        float score = scores_acc[scores.size(0) - 1][idx];
         auto index_list = std::vector<int>{idx};
         last_scores.push_back(std::make_tuple(score, index_list));
     }
@@ -66,6 +69,10 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
         auto frame_edges = box_graph[frame_idx];
 
         auto used_in_sequence = torch::zeros(static_cast<long>(max_scores_paths.back().size()), {torch::kBool});
+        auto used_in_sequence_acc = used_in_sequence.accessor<bool, 1>();
+
+        // std::vector<bool> used_in_sequence(max_scores_paths.back().size(), false);
+
         score_indicies_list max_path_frame;
 
         for (int box_idx = 0; box_idx < frame_edges.size(); box_idx++) {
@@ -73,7 +80,7 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
 
             if (box_edges.size() == 0) {
                 // no edges for current box so consider it a max path consisting of a single node
-                float score = scores.index({frame_idx, box_idx}).item<float>();
+                float score = scores_acc[frame_idx][box_idx]; // scores.index({frame_idx, box_idx}).item<float>();
 
                 std::vector<int> indicies = {box_idx};
                 max_path_frame.push_back(std::make_tuple(score, indicies));
@@ -84,10 +91,12 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
                 // (score >= 0.0)
 
                 auto score_tensor = torch::empty(box_edges.size(), {torch::kFloat32});
+                auto score_acc = score_tensor.accessor<float, 1>();
+
                 for (int i = 0; i < box_edges.size(); i++) {
                     int e_idx = box_edges[i];
-                    used_in_sequence.index({e_idx}) = true;
-                    score_tensor.index({i}) = std::get<0>(max_scores_paths.back()[e_idx]);
+                    used_in_sequence_acc[e_idx] = true;
+                    score_acc[i] = std::get<0>(max_scores_paths.back()[e_idx]);
                 }
 
                 int prev_idx = torch::argmax(score_tensor).item<int>();
@@ -95,15 +104,14 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
                 std::vector<int> path_so_far = std::get<1>(max_scores_paths.back()[box_edges[prev_idx]]);
                 path_so_far.push_back(box_idx);
 
-                max_path_frame.push_back(
-                    std::make_tuple(scores.index({frame_idx, box_idx}).item<float>() + score_so_far, path_so_far));
+                max_path_frame.push_back(std::make_tuple(scores_acc[frame_idx][box_idx] + score_so_far, path_so_far));
             }
         }
 
         // create new sequence roots for boxes in frame at frame_idx + 1 that did not have links from boxes in frame_idx
         score_indicies_list new_sequence_root;
         for (int idx = 0; idx < used_in_sequence.size(0); idx++) {
-            if (!used_in_sequence.index({idx}).item<bool>()) {
+            if (!used_in_sequence_acc[idx]) {
                 new_sequence_root.push_back(max_scores_paths.back()[idx]);
             }
         }
@@ -126,12 +134,14 @@ void rescore_sequence(
     const int& sequence_frame_index,
     const float& max_sum,
     const ScoreMetric& metric) {
+    auto scores_acc = scores.accessor<float, 2>();
+
     if (metric == ScoreMetric::avg) {
         float avg_score = max_sum / static_cast<float>(sequence.size());
 
         for (int i = 0; i < sequence.size(); i++) {
             int box_idx = sequence[i];
-            scores[sequence_frame_index + i][box_idx] = avg_score;
+            scores_acc[sequence_frame_index + i][box_idx] = avg_score;
         }
     } else {
         // metric == ScoreMetric::max
@@ -139,14 +149,14 @@ void rescore_sequence(
 
         for (int i = 0; i < sequence.size(); i++) {
             int box_idx = sequence[i];
-            if (scores[sequence_frame_index + i][box_idx].item<float>() > max_score) {
-                max_score = scores[sequence_frame_index + i][box_idx].item<float>();
+            if (scores_acc[sequence_frame_index + i][box_idx] > max_score) {
+                max_score = scores_acc[sequence_frame_index + i][box_idx];
             }
         }
 
         for (int i = 0; i < sequence.size(); i++) {
             int box_idx = sequence[i];
-            scores.index({sequence_frame_index + i, box_idx}) = max_score;
+            scores_acc[sequence_frame_index + i][box_idx] = max_score;
         }
     }
 }
@@ -156,10 +166,9 @@ void delete_sequence(
     const int& sequence_frame_index,
     const torch::Tensor& scores,
     const torch::Tensor& boxes,
+    const torch::Tensor& box_areas,
     box_seq_t& box_graph,
     const float& iou_threshold) {
-    torch::Tensor box_areas = calculate_area(boxes);
-
     for (int s_idx = 0; s_idx < sequence.size(); s_idx++) {
         int box_idx = sequence[s_idx];
 
@@ -172,10 +181,11 @@ void delete_sequence(
         seq_box_area = seq_box_area.unsqueeze(0);
 
         torch::Tensor iou_tensor = calculate_iou_given_area(other_boxes, seq_box, other_areas, seq_box_area);
+        auto iou_acc = iou_tensor.accessor<float, 2>();
 
         std::vector<int> delete_indicies;
         for (int i = 0; i < iou_tensor.size(0); i++) {
-            if (iou_tensor.index({i}).item<float>() >= iou_threshold) {
+            if (iou_acc[0][i] >= iou_threshold) {
                 delete_indicies.push_back(i);
             }
         }

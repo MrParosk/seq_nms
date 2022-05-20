@@ -21,5 +21,5 @@ while getopts 'c' flag; do
   esac
 done
 
-format_folder src $check
-format_folder tests $check
+format_folder pt_seq_nms/csrc/ $check
+format_folder tests/cpp $check

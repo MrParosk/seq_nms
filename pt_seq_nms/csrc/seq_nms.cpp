@@ -1,13 +1,17 @@
 #include "seq_nms.h"
+#include <exception>
 #include <tuple>
 #include <vector>
-#include <exception>
 #include "box_utils.h"
 #include "sequence_utils.h"
 
 using namespace torch::indexing;
 
-box_seq_t build_box_sequences(const torch::Tensor& boxes, const torch::Tensor& classes, const double& linkage_threshold) {
+box_seq_t build_box_sequences(
+    const torch::Tensor& boxes,
+    const torch::Tensor& box_areas,
+    const torch::Tensor& classes,
+    const double& linkage_threshold) {
     /*
     Creates a graph where vericies are object at a given frame and the edges are if they have an IOU higher than
     @linkage_threshold (two consecutive frames).
@@ -18,29 +22,26 @@ box_seq_t build_box_sequences(const torch::Tensor& boxes, const torch::Tensor& c
     linkage_threshold is the threshold for linking two objects in consecutive frames.
     */
 
-    auto areas = calculate_area(boxes);
+    auto classes_acc = classes.accessor<int, 2>();
 
     box_seq_t box_graph;
     for (int f_idx = 0; f_idx < boxes.size(0) - 1; f_idx++) {
         auto current_box = boxes.index({f_idx, Slice(), Slice()});
-        auto current_area = areas.index({f_idx, Slice()});
+        auto current_area = box_areas.index({f_idx, Slice()});
 
         auto next_box = boxes.index({f_idx + 1, Slice(), Slice()});
-        auto next_area = areas.index({f_idx + 1, Slice()});
+        auto next_area = box_areas.index({f_idx + 1, Slice()});
+
+        // overlap has shape [N, N]
+        auto overlaps = calculate_iou_given_area(current_box, next_box, current_area, next_area);
+        auto overlaps_acc = overlaps.accessor<float, 2>();
 
         std::vector<std::vector<int>> adjacency_matrix;
         for (int b_idx = 0; b_idx < current_box.size(0); b_idx++) {
-            auto box = current_box.index({b_idx, Slice()});
-            box = box.unsqueeze(0);
-            auto box_area = current_area.index({b_idx}).view({1});
-
-            // overlap has shape [1, M]
-            auto overlaps = calculate_iou_given_area(box, next_box, box_area, next_area);
-
             std::vector<int> edges;
             for (int ovr_idx = 0; ovr_idx < overlaps.size(1); ovr_idx++) {
-                auto iou = overlaps.index({0, ovr_idx}).item<double>();
-                bool same_class = torch::equal(classes.index({f_idx, b_idx}), classes.index({f_idx + 1, ovr_idx}));
+                auto iou = overlaps_acc[b_idx][ovr_idx];
+                bool same_class = (classes_acc[f_idx][b_idx] == classes_acc[f_idx + 1][ovr_idx]);
 
                 if ((iou >= linkage_threshold) && same_class) {
                     edges.push_back(ovr_idx);
@@ -65,23 +66,25 @@ ScoreMetric get_score_enum_from_string(const std::string& metric_string) {
     }
 }
 
-void seq_nms(
+torch::Tensor seq_nms(
     const torch::Tensor& boxes,
     const torch::Tensor& scores,
     const torch::Tensor& classes,
     const double& linkage_threshold,
     const double& iou_threshold,
     const std::string& metric) {
-
     ScoreMetric metric_enum = get_score_enum_from_string(metric);
     float linkage_threshold_float = static_cast<float>(linkage_threshold);
     float iou_threshold_float = static_cast<float>(iou_threshold);
 
-    box_seq_t box_graph = build_box_sequences(boxes, classes, linkage_threshold_float);
+    const torch::Tensor box_areas = calculate_area(boxes);
+
+    box_seq_t box_graph = build_box_sequences(boxes, box_areas, classes, linkage_threshold_float);
     torch::Tensor local_scores = scores.clone();
 
     while (true) {
         auto best_tuple = find_best_sequence(box_graph, local_scores);
+
         int sequence_frame_index = std::get<0>(best_tuple);
         std::vector<int> best_sequence = std::get<1>(best_tuple);
         float best_score = std::get<2>(best_tuple);
@@ -91,6 +94,8 @@ void seq_nms(
         }
 
         rescore_sequence(best_sequence, local_scores, sequence_frame_index, best_score, metric_enum);
-        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_graph, iou_threshold_float);
+        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_areas, box_graph, iou_threshold_float);
     }
+
+    return local_scores;
 }

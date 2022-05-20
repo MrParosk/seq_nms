@@ -20,5 +20,6 @@ void delete_sequence(
     const int& sequence_frame_index,
     const torch::Tensor& scores,
     const torch::Tensor& boxes,
+    const torch::Tensor& box_areas,
     box_seq_t& box_graph,
     const float& iou_threshold);
