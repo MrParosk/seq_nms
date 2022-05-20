@@ -78,7 +78,7 @@ class TestTracing(unittest.TestCase):
 
 
 class TestE2E(unittest.TestCase):
-    def test(self):
+    def setUp(self):
         torch.random.manual_seed(42)
         NUM_FRAMES = 100
 
@@ -93,13 +93,28 @@ class TestE2E(unittest.TestCase):
         boxes[:, :, 2] = x1 + width
         boxes[:, :, 3] = y1 + height
 
-        scores = torch.rand((NUM_FRAMES, 20))
-        classes = torch.randint(0, 10, (NUM_FRAMES, 20)).to(torch.int32)
+        self.boxes = boxes
+        self.scores = torch.rand((NUM_FRAMES, 20))
+        self.classes = torch.randint(0, 10, (NUM_FRAMES, 20)).to(torch.int32)
 
-        linkage_theshold = 0.3
-        iou_threshold = 0.2
+        self.linkage_theshold = 0.3
+        self.iou_threshold = 0.2
 
-        updated_scores = seq_nms(boxes, scores, classes, linkage_theshold, iou_threshold)
+    def test_cpu(self):
+        updated_scores = seq_nms(self.boxes, self.scores, self.classes, self.linkage_theshold, self.iou_threshold)
 
-        self.assertEqual(updated_scores.shape, scores.shape)
-        self.assertTrue(not torch.equal(updated_scores, scores))
+        self.assertEqual(updated_scores.shape, self.scores.shape)
+        self.assertTrue(not torch.equal(updated_scores, self.scores))
+
+    @unittest.skipIf(not torch.cuda.is_available(), "CUDA not available")
+    def test_cuda(self):
+        updated_scores = seq_nms(
+            self.boxes.cuda(), self.scores.cuda(), self.classes.cuda(), self.linkage_theshold, self.iou_threshold
+        )
+
+        self.assertEqual(updated_scores.shape, self.scores.shape)
+        self.assertTrue(not torch.equal(updated_scores, self.scores.cuda()))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -20,4 +20,8 @@ def seq_nms(
     assert metrics in ("avg", "max"), f"Expected metrics to be in {('avg', 'max')}, got {metrics}"
 
     # only support cpu ATM
-    return torch.ops.seq_nms.seq_nms(boxes.cpu(), scores.cpu(), classes.cpu(), linkage_threshold, iou_threshold, metrics)
+    updated_scores = torch.ops.seq_nms.seq_nms(
+        boxes.cpu(), scores.cpu(), classes.cpu(), linkage_threshold, iou_threshold, metrics
+    )
+    updated_scores = updated_scores.to(scores.device)
+    return updated_scores

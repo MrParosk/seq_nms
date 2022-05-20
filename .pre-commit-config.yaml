@@ -9,11 +9,10 @@ repos:
     rev: 22.3.0
     hooks:
       - id: black
-        args: [--check, --line-length=128]
+        args: [--line-length=128]
 
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:
       - id: isort
         name: isort (python)
-        args: [--check]
