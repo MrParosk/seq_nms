@@ -1,3 +1,6 @@
 .vscode/
+.venv/
 build/
 libtorch/
+pt_seq_nms.egg-info/
+seq_nms.so

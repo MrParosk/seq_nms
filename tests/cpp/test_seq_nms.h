@@ -84,7 +84,7 @@ TEST(seq_nms, no_errors) {
 
     float linkage_theshold = 0.3;
     float iou_threshold = 0.2;
-    ScoreMetric metric = ScoreMetric::avg;
+    std::string metric = "avg";
 
     seq_nms(boxes, scores, classes, linkage_theshold, iou_threshold, metric);
 }

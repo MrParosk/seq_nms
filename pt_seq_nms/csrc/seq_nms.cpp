@@ -1,6 +1,7 @@
 #include "seq_nms.h"
 #include <tuple>
 #include <vector>
+#include <exception>
 #include "box_utils.h"
 #include "sequence_utils.h"
 
@@ -54,14 +55,29 @@ box_seq_t build_box_sequences(const torch::Tensor& boxes, const torch::Tensor& c
     return box_graph;
 }
 
+ScoreMetric get_score_enum_from_string(const std::string& metric_string) {
+    if (metric_string == "avg") {
+        return ScoreMetric::avg;
+    } else if (metric_string == "max") {
+        return ScoreMetric::max;
+    } else {
+        throw std::invalid_argument("Unsupported metric_string");
+    }
+}
+
 void seq_nms(
     const torch::Tensor& boxes,
     const torch::Tensor& scores,
     const torch::Tensor& classes,
-    const float& linkage_threshold,
-    const float& iou_threshold,
-    const ScoreMetric& metric) {
-    box_seq_t box_graph = build_box_sequences(boxes, classes, linkage_threshold);
+    const double& linkage_threshold,
+    const double& iou_threshold,
+    const std::string& metric) {
+
+    ScoreMetric metric_enum = get_score_enum_from_string(metric);
+    float linkage_threshold_float = static_cast<float>(linkage_threshold);
+    float iou_threshold_float = static_cast<float>(iou_threshold);
+
+    box_seq_t box_graph = build_box_sequences(boxes, classes, linkage_threshold_float);
     torch::Tensor local_scores = scores.clone();
 
     while (true) {
@@ -74,7 +90,7 @@ void seq_nms(
             break;
         }
 
-        rescore_sequence(best_sequence, local_scores, sequence_frame_index, best_score, metric);
-        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_graph, iou_threshold);
+        rescore_sequence(best_sequence, local_scores, sequence_frame_index, best_score, metric_enum);
+        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_graph, iou_threshold_float);
     }
 }
