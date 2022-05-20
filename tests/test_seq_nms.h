@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/seq_nms.h"
+#include "seq_nms.h"
 
 using namespace torch::indexing;
 

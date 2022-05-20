@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/box_utils.h"
+#include "box_utils.h"
 
 TEST(calculate_area, area_single_box) {
     auto boxes = torch::tensor({1, 2, 3, 4}, {torch::kFloat32});

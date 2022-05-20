@@ -1,6 +1,6 @@
+#include "sequence_utils.h"
 #include <algorithm>
 #include "box_utils.h"
-#include "sequence_utils.h"
 
 using namespace torch::indexing;
 

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/sequence_utils.h"
+#include "sequence_utils.h"
 
 TEST(find_highest_score_sequence, find_highest) {
     std::vector<score_indicies_list> sequences = {

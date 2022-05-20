@@ -1,7 +1,7 @@
 #pragma once
+#include <torch/torch.h>
 #include <tuple>
 #include <vector>
-#include <torch/torch.h>
 #include "custom_types.h"
 
 std::tuple<int, std::vector<int>, float> find_highest_score_sequence(const std::vector<score_indicies_list>& sequence_roots);

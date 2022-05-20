@@ -1,6 +1,6 @@
+#include "seq_nms.h"
 #include <tuple>
 #include <vector>
-#include "seq_nms.h"
 #include "box_utils.h"
 #include "sequence_utils.h"
 
