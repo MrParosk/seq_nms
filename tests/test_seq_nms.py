@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import torch
 
-from pt_seq_nms import seq_nms
+from pt_seq_nms.seq_nms import _from_list_to_tensor, seq_nms
 
 
 class TestingModule(torch.nn.Module):
@@ -77,7 +77,7 @@ class TestTracing(unittest.TestCase):
         self._trace_save_load(m)
 
 
-class TestE2E(unittest.TestCase):
+class TestE2ESeqNMS(unittest.TestCase):
     def setUp(self):
         torch.random.manual_seed(42)
         NUM_FRAMES = 100
@@ -114,6 +114,41 @@ class TestE2E(unittest.TestCase):
 
         self.assertEqual(updated_scores.shape, self.scores.shape)
         self.assertTrue(not torch.equal(updated_scores, self.scores.cuda()))
+
+
+class TestFromListToTensor(unittest.TestCase):
+    def test_fill(self):
+        boxes_list = [
+            torch.tensor([1, 2, 3, 4, 5, 6, 7, 8], dtype=torch.float32).view((2, 4)),
+            torch.tensor([9, 10, 11, 12], dtype=torch.float32).view((1, 4)),
+            torch.tensor([], dtype=torch.float32).view((0, 4)),
+        ]
+
+        scores_list = [
+            torch.tensor([0.5, 0.7], dtype=torch.float32),
+            torch.tensor([0.9], dtype=torch.float32),
+            torch.tensor([], dtype=torch.float32),
+        ]
+
+        classes_list = [
+            torch.tensor([1, 2], dtype=torch.int32),
+            torch.tensor([3], dtype=torch.int32),
+            torch.tensor([], dtype=torch.int32),
+        ]
+
+        boxes, scores, classes = _from_list_to_tensor(boxes_list, scores_list, classes_list)
+
+        expected_boxes = torch.tensor(
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=torch.float32
+        ).view((3, 2, 4))
+
+        expected_scores = torch.tensor([0.5, 0.7, 0.9, 0.0, 0.0, 0.0], dtype=torch.float32).view((3, 2))
+
+        expected_classes = torch.tensor([1, 2, 3, -1, -1, -1], dtype=torch.int32).view((3, 2))
+
+        self.assertTrue(torch.allclose(boxes, expected_boxes))
+        self.assertTrue(torch.allclose(scores, expected_scores))
+        self.assertTrue(torch.allclose(classes, expected_classes))
 
 
 if __name__ == "__main__":
