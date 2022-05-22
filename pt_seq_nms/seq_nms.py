@@ -78,7 +78,6 @@ def seq_nms_from_list(
     metrics: str = "avg",
 ) -> torch.Tensor:
 
-    # TODO: Need to fix such that classes with idx -1 will be skipped
     _validate_auxiliary_params(linkage_threshold, iou_threshold, metrics)
 
     boxes, scores, classes = _from_list_to_tensor(boxes_list, scores_list, classes_list)

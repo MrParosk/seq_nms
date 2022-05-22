@@ -1,4 +1,5 @@
 #include "box_utils.h"
+#include "custom_types.h"
 
 using namespace torch::indexing;
 
@@ -41,6 +42,6 @@ torch::Tensor calculate_iou_given_area(
     auto intersection = inter.index({Slice(), Slice(), 0}) * inter.index({Slice(), Slice(), 1});
 
     auto union_ = areas_a.unsqueeze(1) + areas_b.unsqueeze(0) - intersection;
-    auto iou = torch::div(intersection, union_);
+    auto iou = torch::div(intersection, union_ + EPS);
     return iou;
 }

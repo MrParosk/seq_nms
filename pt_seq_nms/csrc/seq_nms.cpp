@@ -43,7 +43,10 @@ box_seq_t build_box_sequences(
                 float iou = overlaps_acc[b_idx][ovr_idx];
                 bool same_class = (classes_acc[f_idx][b_idx] == classes_acc[f_idx + 1][ovr_idx]);
 
-                if ((iou >= linkage_threshold) && same_class) {
+                // class idx < 0 are considered skip idxs
+                bool accepted_class = (classes_acc[f_idx][b_idx] >= 0);
+
+                if ((iou >= linkage_threshold) && same_class && accepted_class) {
                     edges.push_back(ovr_idx);
                 }
             }
