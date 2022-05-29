@@ -60,6 +60,10 @@ box_seq_t build_box_sequences(
 }
 
 ScoreMetric get_score_enum_from_string(const std::string& metric_string) {
+    /*
+    Converts @metric_string to the enum "ScoreMetric".
+    */
+
     if (metric_string == "avg") {
         return ScoreMetric::avg;
     } else if (metric_string == "max") {

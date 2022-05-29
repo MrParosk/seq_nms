@@ -131,6 +131,12 @@ void rescore_sequence(
     const int& sequence_frame_index,
     const float& max_sum,
     const ScoreMetric& metric) {
+    /*
+    Given a sequence, rescore the scores either by:
+        - Average max_sum amongs sequence's elements (ScoreMetric::avg).
+        - Find the max value amongs the sequence's elements, and set all values to that (ScoreMetric::max).
+    */
+
     auto scores_acc = scores.accessor<float, 2>();
 
     if (metric == ScoreMetric::avg) {
@@ -166,6 +172,11 @@ void delete_sequence(
     const torch::Tensor& box_areas,
     box_seq_t& box_graph,
     const float& iou_threshold) {
+    /*
+    Given a sequence, remove connections in @box_graph which have iou higher than @iou_threshold
+        with index @sequence_frame_index.
+    */
+
     for (int s_idx = 0; s_idx < sequence.size(); s_idx++) {
         int box_idx = sequence[s_idx];
 

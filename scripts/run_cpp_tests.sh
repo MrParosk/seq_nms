@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ATM cmake is only used for running cpp-tests
+set -e
 
 current_dir=$(pwd) 
 mkdir -p build
