@@ -57,7 +57,7 @@ def _from_list_to_tensor(
 
     max_length = max([len(b) for b in boxes_list])
     num_element = len(boxes_list)
-    device = boxes_list[0].device if len(boxes_list) > 0 else "cpu"
+    device = boxes_list[0].device.type if len(boxes_list) > 0 else "cpu"
 
     boxes = torch.zeros((num_element, max_length, 4), dtype=torch.float32, device=device)
     scores = torch.zeros((num_element, max_length), dtype=torch.float32, device=device)
