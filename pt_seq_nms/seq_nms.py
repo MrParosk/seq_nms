@@ -3,10 +3,24 @@ from typing import List, Tuple
 import torch
 
 
+def _all_same_types(types: List[str]) -> bool:
+    # Can't use set(types) == 1 since set() is not supported by torchscript at the moment
+    found: List[str] = []
+
+    for t in types:
+        if t not in found:
+            found.append(t)
+
+    return len(found) == 1
+
+
 def _validate_tensor_types(boxes: torch.Tensor, scores: torch.Tensor, classes: torch.Tensor) -> None:
     assert boxes.dtype == torch.float32, f"boxes are expected to have dtype float32, got {boxes.dtype}"
     assert scores.dtype == torch.float32, f"scores are expected to have dtype float32, got {scores.dtype}"
     assert classes.dtype == torch.int32, f"classes are expected to have dtype float32, got {classes.dtype}"
+    assert _all_same_types(
+        [boxes.device.type, scores.device.type, classes.device.type]
+    ), "Expected all of the tensors to be on the same device"
 
 
 def _validate_auxiliary_params(linkage_threshold: float, iou_threshold: float, metrics: str = "avg") -> None:
@@ -31,11 +45,7 @@ def seq_nms(
     _validate_tensor_types(boxes, scores, classes)
     _validate_auxiliary_params(linkage_threshold, iou_threshold, metrics)
 
-    # only support cpu ATM
-    updated_scores = torch.ops.seq_nms.seq_nms(
-        boxes.cpu(), scores.cpu(), classes.cpu(), linkage_threshold, iou_threshold, metrics
-    )
-    updated_scores = updated_scores.to(scores.device)
+    updated_scores = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
     return updated_scores
 
 
@@ -47,10 +57,11 @@ def _from_list_to_tensor(
 
     max_length = max([len(b) for b in boxes_list])
     num_element = len(boxes_list)
+    device = boxes_list[0].device if len(boxes_list) > 0 else "cpu"
 
-    boxes = torch.zeros((num_element, max_length, 4), dtype=torch.float32)
-    scores = torch.zeros((num_element, max_length), dtype=torch.float32)
-    classes = -1 * torch.ones((num_element, max_length), dtype=torch.int32)
+    boxes = torch.zeros((num_element, max_length, 4), dtype=torch.float32, device=device)
+    scores = torch.zeros((num_element, max_length), dtype=torch.float32, device=device)
+    classes = -1 * torch.ones((num_element, max_length), dtype=torch.int32, device=device)
 
     for idx in range(len(boxes_list)):
         len_idx = len(boxes_list[idx])
@@ -61,10 +72,9 @@ def _from_list_to_tensor(
 
         _validate_tensor_types(boxes_idx, scores_idx, classes_idx)
 
-        # only support cpu ATM
-        boxes[idx, 0:len_idx, :] = boxes_idx.cpu()
-        scores[idx, 0:len_idx] = scores_idx.cpu()
-        classes[idx, 0:len_idx] = classes_idx.cpu()
+        boxes[idx, 0:len_idx, :] = boxes_idx
+        scores[idx, 0:len_idx] = scores_idx
+        classes[idx, 0:len_idx] = classes_idx
 
     return boxes, scores, classes
 
@@ -83,6 +93,4 @@ def seq_nms_from_list(
     boxes, scores, classes = _from_list_to_tensor(boxes_list, scores_list, classes_list)
 
     updated_scores = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
-
-    updated_scores = updated_scores.to(scores.device)
     return updated_scores

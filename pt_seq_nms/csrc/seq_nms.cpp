@@ -84,10 +84,14 @@ torch::Tensor seq_nms(
     float linkage_threshold_float = static_cast<float>(linkage_threshold);
     float iou_threshold_float = static_cast<float>(iou_threshold);
 
-    const torch::Tensor box_areas = calculate_area(boxes);
+    torch::Tensor box_areas = calculate_area(boxes);
+    box_areas = box_areas.to(torch::kCPU);
 
-    box_seq_t box_graph = build_box_sequences(boxes, box_areas, classes, linkage_threshold_float);
-    torch::Tensor local_scores = scores.clone();
+    const auto boxes_cpu = boxes.to(torch::kCPU);
+    const auto classes_cpu = classes.to(torch::kCPU);
+
+    box_seq_t box_graph = build_box_sequences(boxes_cpu, box_areas, classes_cpu, linkage_threshold_float);
+    torch::Tensor local_scores = scores.to(torch::kCPU).clone();
 
     while (true) {
         auto best_tuple = find_best_sequence(box_graph, local_scores);
@@ -101,8 +105,10 @@ torch::Tensor seq_nms(
         }
 
         rescore_sequence(best_sequence, local_scores, sequence_frame_index, best_score, metric_enum);
-        delete_sequence(best_sequence, sequence_frame_index, local_scores, boxes, box_areas, box_graph, iou_threshold_float);
+        delete_sequence(
+            best_sequence, sequence_frame_index, local_scores, boxes_cpu, box_areas, box_graph, iou_threshold_float);
     }
 
+    local_scores = local_scores.to(scores.device());
     return local_scores;
 }

@@ -82,11 +82,11 @@ class TestE2ESeqNMS(unittest.TestCase):
         torch.random.manual_seed(42)
         NUM_FRAMES = 100
 
-        boxes = torch.empty((NUM_FRAMES, 20, 4))
-        width = 50.0 * torch.rand((NUM_FRAMES, 20))
-        height = 50.0 * torch.rand((NUM_FRAMES, 20))
-        x1 = 50.0 * torch.rand((NUM_FRAMES, 20))
-        y1 = 50.0 * torch.rand((NUM_FRAMES, 20))
+        boxes = torch.empty((NUM_FRAMES, 20, 4), dtype=torch.float32)
+        width = 50.0 * torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
+        height = 50.0 * torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
+        x1 = 50.0 * torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
+        y1 = 50.0 * torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
 
         boxes[:, :, 0] = x1
         boxes[:, :, 1] = y1
@@ -94,8 +94,8 @@ class TestE2ESeqNMS(unittest.TestCase):
         boxes[:, :, 3] = y1 + height
 
         self.boxes = boxes
-        self.scores = torch.rand((NUM_FRAMES, 20))
-        self.classes = torch.randint(0, 10, (NUM_FRAMES, 20)).to(torch.int32)
+        self.scores = torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
+        self.classes = torch.randint(0, 10, (NUM_FRAMES, 20), dtype=torch.int32)
 
         self.linkage_theshold = 0.3
         self.iou_threshold = 0.2
@@ -165,11 +165,11 @@ class TestE2ESeqNMSList(unittest.TestCase):
         for _ in range(NUM_FRAMES):
             num_objects = random.randint(0, MAX_OBJECT_FRAMES)
 
-            boxes = torch.empty((num_objects, 4))
-            width = 50.0 * torch.rand((num_objects))
-            height = 50.0 * torch.rand((num_objects))
-            x1 = 50.0 * torch.rand((num_objects))
-            y1 = 50.0 * torch.rand((num_objects))
+            boxes = torch.empty((num_objects, 4), dtype=torch.float32)
+            width = 50.0 * torch.rand((num_objects), dtype=torch.float32)
+            height = 50.0 * torch.rand((num_objects), dtype=torch.float32)
+            x1 = 50.0 * torch.rand((num_objects), dtype=torch.float32)
+            y1 = 50.0 * torch.rand((num_objects), dtype=torch.float32)
 
             boxes[:, 0] = x1
             boxes[:, 1] = y1
@@ -177,7 +177,7 @@ class TestE2ESeqNMSList(unittest.TestCase):
             boxes[:, 3] = y1 + height
 
             scores = torch.rand((num_objects,))
-            classes = torch.randint(0, 10, (num_objects,)).to(torch.int32)
+            classes = torch.randint(0, 10, (num_objects,), dtype=torch.int32)
 
             boxes_list.append(boxes)
             scores_list.append(scores)
