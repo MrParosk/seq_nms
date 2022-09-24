@@ -80,6 +80,18 @@ torch::Tensor seq_nms(
     const double& linkage_threshold,
     const double& iou_threshold,
     const std::string& metric) {
+    /*
+    Applies the seq-nms algorithm to the input boxes.
+
+    boxes are expected to have the shape [F, N, 4] and of the format [x_min, y_min, x_max, y_max].
+        F is the number of frames and N is the number of objects per frame.
+    scores are expected to have the shape [F, N].
+    classes are expected to have the shape [F, N].
+    linkage_threshold is the threshold for linking two objects in consecutive frames.
+    iou_threshold is the threshold for considering two boxes to be overlapping.
+    metric is the metric type, currently "avg" and "max" is supported.
+    */
+
     ScoreMetric metric_enum = get_score_enum_from_string(metric);
     float linkage_threshold_float = static_cast<float>(linkage_threshold);
     float iou_threshold_float = static_cast<float>(iou_threshold);

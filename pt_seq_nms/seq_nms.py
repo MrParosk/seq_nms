@@ -37,6 +37,23 @@ def seq_nms(
     iou_threshold: float,
     metrics: str = "avg",
 ) -> torch.Tensor:
+    """
+    Applies the seq-nms algorithm to the input boxes.
+
+    Below F is the number of frames and N is the number of objects per frame.
+
+    Args:
+        boxes (Tensor[F, N, 4]) Boxes to perform seq-nms on. They are expected to be in
+           (x_min, y_min, x_max, y_max) format.
+        scores (Tensor[F, N]): Scores for each one of the boxes.
+        classes (Tensor[F, N]): Class for each one of the boxes.
+        linkage_threshold (float): The threshold for linking two objects in consecutive frames.
+        iou_threshold (float): the threshold for considering two boxes to be overlapping.
+        metric (str): the metric type, currently "avg" and "max" is supported.
+    Returns:
+        updated_scores (Tensor): tensor with the updated scores, i.e. the scores after they have been
+            updated according to seq-nms.
+    """
 
     assert len(boxes.shape) == 3 and boxes.shape[-1] == 4, f"boxes has wrong shape, expected (F, N, 4), got {boxes.shape}"
     assert len(scores.shape) == 2, f"scores has wrong shape, expected (F, N) got {scores.shape}"
