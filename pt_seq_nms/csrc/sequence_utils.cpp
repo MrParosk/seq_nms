@@ -77,7 +77,7 @@ std::tuple<int, std::vector<int>, float> find_best_sequence(const box_seq_t& box
 
             if (box_edges.size() == 0) {
                 // no edges for current box so consider it a max path consisting of a single node
-                float score = scores_acc[frame_idx][box_idx]; // scores.index({frame_idx, box_idx}).item<float>();
+                float score = scores_acc[frame_idx][box_idx];
 
                 std::vector<int> indicies = {box_idx};
                 max_path_frame.push_back(std::make_tuple(score, indicies));
@@ -133,8 +133,8 @@ void rescore_sequence(
     const ScoreMetric& metric) {
     /*
     Given a sequence, rescore the scores either by:
-        - Average max_sum amongs sequence's elements (ScoreMetric::avg).
-        - Find the max value amongs the sequence's elements, and set all values to that (ScoreMetric::max).
+        - Average max_sum among sequence's elements (ScoreMetric::avg).
+        - Find the max value among the sequence's elements, and set all values to that (ScoreMetric::max).
     */
 
     auto scores_acc = scores.accessor<float, 2>();

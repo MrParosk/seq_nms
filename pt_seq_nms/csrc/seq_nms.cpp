@@ -13,7 +13,7 @@ box_seq_t build_box_sequences(
     const torch::Tensor& classes,
     const double& linkage_threshold) {
     /*
-    Creates a graph where vericies are object at a given frame and the edges are if they have an IOU higher than
+    Creates a graph where vertices are object at a given frame and the edges are if they have an IOU higher than
     @linkage_threshold (two consecutive frames).
 
     boxes are expected to have the shape [F, N, 4] and of the format [x_min, y_min, x_max, y_max].
