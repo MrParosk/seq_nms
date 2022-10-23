@@ -1,6 +1,6 @@
 # Seq-nms in PyTorch
 
-![main](https://github.com/MrParosk/seq_nms/workflows/main/badge.svg?branch=main)
+![main](https://github.com/MrParosk/seq_nms/workflows/main/badge.svg?branch=main) [![codecov](https://codecov.io/gh/MrParosk/seq_nms/branch/main/graph/badge.svg?token=7DYQ1CHZQS)](https://codecov.io/gh/MrParosk/seq_nms)
 
 Implementation of the seq-nms algorithm described in the paper: [Seq-NMS for Video Object Detection](https://arxiv.org/abs/1602.08465)
 
