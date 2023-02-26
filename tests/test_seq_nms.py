@@ -97,11 +97,11 @@ class TestE2ESeqNMS(unittest.TestCase):
         self.scores = torch.rand((NUM_FRAMES, 20), dtype=torch.float32)
         self.classes = torch.randint(0, 10, (NUM_FRAMES, 20), dtype=torch.int32)
 
-        self.linkage_theshold = 0.3
+        self.linkage_threshold = 0.3
         self.iou_threshold = 0.2
 
     def test_cpu(self):
-        updated_scores = seq_nms(self.boxes, self.scores, self.classes, self.linkage_theshold, self.iou_threshold)
+        updated_scores = seq_nms(self.boxes, self.scores, self.classes, self.linkage_threshold, self.iou_threshold)
 
         self.assertEqual(updated_scores.shape, self.scores.shape)
         self.assertTrue(not torch.equal(updated_scores, self.scores))
@@ -109,7 +109,7 @@ class TestE2ESeqNMS(unittest.TestCase):
     @unittest.skipIf(not torch.cuda.is_available(), "CUDA not available")
     def test_cuda(self):
         updated_scores = seq_nms(
-            self.boxes.cuda(), self.scores.cuda(), self.classes.cuda(), self.linkage_theshold, self.iou_threshold
+            self.boxes.cuda(), self.scores.cuda(), self.classes.cuda(), self.linkage_threshold, self.iou_threshold
         )
 
         self.assertEqual(updated_scores.shape, self.scores.shape)
@@ -187,11 +187,11 @@ class TestE2ESeqNMSList(unittest.TestCase):
         self.scores_list = scores_list
         self.classes_list = classes_list
 
-        self.linkage_theshold = 0.3
+        self.linkage_threshold = 0.3
         self.iou_threshold = 0.2
 
     def test(self):
-        _ = seq_nms_from_list(self.boxes_list, self.scores_list, self.classes_list, self.linkage_theshold, self.iou_threshold)
+        _ = seq_nms_from_list(self.boxes_list, self.scores_list, self.classes_list, self.linkage_threshold, self.iou_threshold)
 
 
 if __name__ == "__main__":

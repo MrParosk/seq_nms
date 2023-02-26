@@ -96,11 +96,11 @@ TEST(seq_nms, no_errors) {
 
     auto classes = torch::randint(0, 10, {NUM_FRAMES, 20}, {torch::kInt32});
 
-    float linkage_theshold = 0.3;
+    float linkage_threshold = 0.3;
     float iou_threshold = 0.2;
     std::string metric = "avg";
 
-    torch::Tensor scores_update = seq_nms(boxes, scores, classes, linkage_theshold, iou_threshold, metric);
+    torch::Tensor scores_update = seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metric);
     std::vector<int64_t> expected_size = {NUM_FRAMES, 20};
     ASSERT_EQ(scores_update.sizes(), expected_size);
 }

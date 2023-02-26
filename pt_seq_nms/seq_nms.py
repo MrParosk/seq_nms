@@ -28,7 +28,7 @@ def _validate_tensor_types(boxes: torch.Tensor, scores: torch.Tensor, classes: t
 
     assert boxes.dtype == torch.float32, f"boxes are expected to have dtype float32, got {boxes.dtype}"
     assert scores.dtype == torch.float32, f"scores are expected to have dtype float32, got {scores.dtype}"
-    assert classes.dtype == torch.int32, f"classes are expected to have dtype float32, got {classes.dtype}"
+    assert classes.dtype == torch.int32, f"classes are expected to have dtype int32, got {classes.dtype}"
     assert _all_same_types(
         [boxes.device.type, scores.device.type, classes.device.type]
     ), "Expected all of the tensors to be on the same device"
