@@ -2,7 +2,6 @@ import os
 import unittest
 
 import torch
-import torch._dynamo
 
 from pt_seq_nms.seq_nms import seq_nms, seq_nms_from_list
 
@@ -13,6 +12,8 @@ def _under_version_two():
 
 if not _under_version_two():
     # Needed ATM to fall back to eager for torch.compile
+    import torch._dynamo
+
     torch._dynamo.config.suppress_errors = True
 
 
