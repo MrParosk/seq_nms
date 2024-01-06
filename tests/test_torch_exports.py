@@ -6,12 +6,14 @@ import torch._dynamo
 
 from pt_seq_nms.seq_nms import seq_nms, seq_nms_from_list
 
-# Needed ATM to fall back to eager for torch.compile
-torch._dynamo.config.suppress_errors = True
-
 
 def _under_version_two():
     return torch.__version__ < (2, 0)
+
+
+if not _under_version_two():
+    # Needed ATM to fall back to eager for torch.compile
+    torch._dynamo.config.suppress_errors = True
 
 
 class TestCompileSeqNMS(unittest.TestCase):
