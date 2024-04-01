@@ -10,7 +10,7 @@ jobs:
   build-test-cpp:
       runs-on: ubuntu-latest
       steps:
-      - uses: actions/thresholdcheckout@v4
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: sudo apt-get install -y wget unzip cmake libgtest-dev
       - name: Fetch libtorch # TODO: using a older version since 2.2.2 had some changes to how caffe2::mkl was included. Need to fix
@@ -23,7 +23,7 @@ jobs:
   linting-code-coverage-python:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/thresholdcheckout@v4
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -61,7 +61,7 @@ jobs:
         os: [ubuntu-latest]
         pytorch-version: ['1.13.1', '2.2.2']
     steps:
-    - uses: actions/thresholdcheckout@v4
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -80,7 +80,7 @@ jobs:
   windows-test:
     runs-on: "windows-latest"
     steps:
-    - uses: actions/thresholdcheckout@v4
+    - uses: actions/checkout@v4
     - uses: ilammy/msvc-dev-cmd@v1
     - uses: actions/setup-python@v5
       with:
