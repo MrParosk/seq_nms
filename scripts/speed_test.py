@@ -2,7 +2,7 @@ import time
 
 import torch
 
-from pt_seq_nms import seq_nms as pt_seq_nms
+from pt_seq_nms import seq_nms
 
 NUM_ITERS = 10
 NUM_CLASSES = 10
@@ -36,7 +36,7 @@ def main():
 
     start_time = time.time()
     for _ in range(NUM_ITERS):
-        _ = pt_seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, "avg")
+        _ = seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, "avg")
     end_time = time.time()
 
     avg_time = (end_time - start_time) / NUM_ITERS
