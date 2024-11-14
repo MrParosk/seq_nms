@@ -83,7 +83,7 @@ def seq_nms(
     _validate_tensor_types(boxes, scores, classes)
     _validate_auxiliary_params(linkage_threshold, iou_threshold, metrics)
 
-    updated_scores = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
+    updated_scores: torch.Tensor = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
     return updated_scores
 
 
@@ -166,5 +166,5 @@ def seq_nms_from_list(
 
     boxes, scores, classes = _from_list_to_tensor(boxes_list, scores_list, classes_list)
 
-    updated_scores = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
+    updated_scores: torch.Tensor = torch.ops.seq_nms.seq_nms(boxes, scores, classes, linkage_threshold, iou_threshold, metrics)
     return updated_scores
