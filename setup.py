@@ -6,7 +6,7 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CppExtension
 
 torch_ver = [int(x) for x in torch.__version__.split(".")[:2]]
-assert torch_ver >= [1, 7], "Requires PyTorch >= 1.7"
+assert torch_ver >= [1, 7], "Requires PyTorch >= 2.4"
 
 
 def get_extension():
@@ -25,7 +25,7 @@ setup(
     version="0.1",
     packages=("pt_seq_nms",),
     description="PyTorch implementation of the seq-nms algorithm",
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=[],
     ext_modules=get_extension(),
     cmdclass={"build_ext": BuildExtension.with_options(no_python_abi_suffix=True)},
